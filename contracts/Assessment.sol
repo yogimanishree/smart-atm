@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-//import "hardhat/console.sol";
-
 contract Assessment {
     address payable public owner;
     uint256 public balance;
+    string[] public goals; // Array to store goals
 
     event Deposit(uint256 amount);
     event Withdraw(uint256 amount);
+    event GoalAdded(string goal);
+    event GoalRemoved(string goal);
 
     constructor(uint initBalance) payable {
         owner = payable(msg.sender);
@@ -20,22 +21,13 @@ contract Assessment {
     }
 
     function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
-
-        // make sure this is the owner
         require(msg.sender == owner, "You are not the owner of this account");
-
-        // perform transaction
+        uint _previousBalance = balance;
         balance += _amount;
-
-        // assert transaction completed successfully
         assert(balance == _previousBalance + _amount);
-
-        // emit the event
         emit Deposit(_amount);
     }
 
-    // custom error
     error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
 
     function withdraw(uint256 _withdrawAmount) public {
@@ -47,14 +39,25 @@ contract Assessment {
                 withdrawAmount: _withdrawAmount
             });
         }
-
-        // withdraw the given amount
         balance -= _withdrawAmount;
-
-        // assert the balance is correct
         assert(balance == (_previousBalance - _withdrawAmount));
-
-        // emit the event
         emit Withdraw(_withdrawAmount);
+    }
+
+    function addGoal(string memory _goal) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        goals.push(_goal);
+        emit GoalAdded(_goal);
+    }
+
+    function removeGoal(uint256 index) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+        require(index < goals.length, "Index out of bounds");
+        string memory goalToRemove = goals[index];
+        for (uint256 i = index; i < goals.length - 1; i++) {
+            goals[i] = goals[i + 1];
+        }
+        goals.pop();
+        emit GoalRemoved(goalToRemove);
     }
 }
